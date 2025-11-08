@@ -5,9 +5,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
-import { Upload, FileText, LogOut } from "lucide-react";
+import { Upload, FileText, LogOut, BarChart3, FileStack } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+// Mock data for charts
+const monthlyOrdersData = [
+  { month: "Jan", pedidos: 12, valor: 120000 },
+  { month: "Fev", pedidos: 8, valor: 85000 },
+  { month: "Mar", pedidos: 15, valor: 145000 },
+  { month: "Abr", pedidos: 10, valor: 98000 },
+  { month: "Mai", pedidos: 18, valor: 175000 },
+];
+
+const supplierData = [
+  { name: "Fornecedor ABC", valor: 68500 },
+  { name: "Fornecedor XYZ", valor: 48000 },
+  { name: "Fornecedor DEF", valor: 32300 },
+  { name: "Fornecedor GHI", valor: 28700 },
+  { name: "Fornecedor JKL", valor: 24500 },
+];
+
+const statusData = [
+  { name: "Aprovados", value: 45, color: "hsl(var(--primary))" },
+  { name: "Em Análise", value: 30, color: "hsl(var(--accent))" },
+  { name: "Pendentes", value: 25, color: "hsl(var(--muted))" },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -39,9 +63,16 @@ const Dashboard = () => {
     }, 1000);
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 relative"
+      className="min-h-screen p-4 relative"
       style={{
         backgroundImage: `url(${background})`,
         backgroundSize: 'cover',
@@ -50,22 +81,169 @@ const Dashboard = () => {
     >
       <div className="absolute inset-0 bg-primary/40 backdrop-blur-md" />
       
-      <div className="w-full max-w-3xl relative z-10 space-y-6">
+      <div className="w-full max-w-7xl mx-auto relative z-10 space-y-6">
         <div className="flex justify-between items-center">
           <img src={logo} alt="Unimaq Logo" className="h-20 w-auto" />
-          <Button 
-            variant="secondary" 
-            onClick={handleLogout}
-            className="gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Sair
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              variant="secondary" 
+              onClick={() => navigate("/orders")}
+              className="gap-2"
+            >
+              <FileStack className="w-4 h-4" />
+              Ver Todos os Pedidos
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={handleLogout}
+              className="gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Sair
+            </Button>
+          </div>
         </div>
 
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Monthly Orders Chart */}
+          <Card className="shadow-2xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Pedidos por Mês
+              </CardTitle>
+              <CardDescription>Total de pedidos realizados nos últimos meses</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyOrdersData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
+                  <YAxis stroke="hsl(var(--foreground))" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)"
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="pedidos" fill="hsl(var(--primary))" name="Quantidade" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Monthly Values Chart */}
+          <Card className="shadow-2xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Valores por Mês (R$)
+              </CardTitle>
+              <CardDescription>Total em reais gastos por mês</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={monthlyOrdersData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
+                  <YAxis 
+                    stroke="hsl(var(--foreground))"
+                    tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)"
+                    }}
+                    formatter={(value: number) => formatCurrency(value)}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="valor" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    name="Valor Total"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Supplier Values Chart */}
+          <Card className="shadow-2xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Valores por Fornecedor
+              </CardTitle>
+              <CardDescription>Total de compras por fornecedor no mês</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={supplierData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    type="number" 
+                    stroke="hsl(var(--foreground))"
+                    tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                  />
+                  <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={120} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)"
+                    }}
+                    formatter={(value: number) => formatCurrency(value)}
+                  />
+                  <Bar dataKey="valor" fill="hsl(var(--accent))" name="Valor Total" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Status Distribution Chart */}
+          <Card className="shadow-2xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Status dos Pedidos
+              </CardTitle>
+              <CardDescription>Distribuição dos pedidos por status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="hsl(var(--primary))"
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Upload Section */}
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-3xl font-bold">Sistema de Pedidos</CardTitle>
+            <CardTitle className="text-3xl font-bold">Enviar Novo Pedido</CardTitle>
             <CardDescription className="text-base">
               Envie seu pedido de compra para análise
             </CardDescription>
