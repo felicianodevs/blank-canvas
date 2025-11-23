@@ -17,13 +17,13 @@ const monthlyOrdersData = [
   { month: "Mar", pedidos: 15, valor: 145000 },
   { month: "Abr", pedidos: 10, valor: 98000 },
   { month: "Mai", pedidos: 18, valor: 175000 },
-  { month: "Jun", pedidos: 14, valor: 135000 },
-  { month: "Jul", pedidos: 11, valor: 115000 },
-  { month: "Ago", pedidos: 16, valor: 158000 },
-  { month: "Set", pedidos: 13, valor: 142000 },
-  { month: "Out", pedidos: 19, valor: 182000 },
-  { month: "Nov", pedidos: 17, valor: 165000 },
-  { month: "Dez", pedidos: 20, valor: 195000 },
+  { month: "Jun", pedidos: 0, valor: 0 },
+  { month: "Jul", pedidos: 0, valor: 0 },
+  { month: "Ago", pedidos: 0, valor: 0 },
+  { month: "Set", pedidos: 0, valor: 0 },
+  { month: "Out", pedidos: 0, valor: 0 },
+  { month: "Nov", pedidos: 0, valor: 0 },
+  { month: "Dez", pedidos: 0, valor: 0 },
 ];
 
 const supplierData = [
