@@ -135,8 +135,8 @@ const Dashboard = () => {
               <CardDescription>Total de pedidos realizados nos últimos meses</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyOrdersData}>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={monthlyOrdersData} barSize={40}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
                   <YAxis stroke="hsl(var(--foreground))" />
@@ -170,7 +170,7 @@ const Dashboard = () => {
               <CardDescription>Total em reais gastos por mês</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={monthlyOrdersData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
@@ -191,7 +191,7 @@ const Dashboard = () => {
                     type="monotone" 
                     dataKey="valor" 
                     stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
+                    strokeWidth={4}
                     name="Valor Total"
                   />
                 </LineChart>
@@ -209,8 +209,8 @@ const Dashboard = () => {
               <CardDescription>Total de compras por fornecedor no mês</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={supplierData} layout="vertical">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={supplierData} layout="vertical" barSize={30}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis 
                     type="number" 
@@ -248,7 +248,7 @@ const Dashboard = () => {
               <CardDescription>Distribuição dos pedidos por status</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={400}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -256,7 +256,7 @@ const Dashboard = () => {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
+                    outerRadius={130}
                     fill="hsl(var(--primary))"
                     dataKey="value"
                   >
