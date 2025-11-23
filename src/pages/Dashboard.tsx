@@ -70,6 +70,12 @@ const Dashboard = () => {
     }).format(value);
   };
 
+  const handleBarClick = (data: any) => {
+    if (data && data.month) {
+      navigate(`/monthly-history?month=${data.month}`);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen p-4 relative"
@@ -129,7 +135,13 @@ const Dashboard = () => {
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="pedidos" fill="hsl(var(--primary))" name="Quantidade" />
+                  <Bar 
+                    dataKey="pedidos" 
+                    fill="hsl(var(--primary))" 
+                    name="Quantidade"
+                    onClick={handleBarClick}
+                    cursor="pointer"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
