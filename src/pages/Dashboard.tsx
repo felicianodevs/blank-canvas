@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/assets/logo.png";
+import { TransparentLogo } from "@/components/TransparentLogo";
 import background from "@/assets/background.webp";
 import { Upload, FileText, LogOut, BarChart3, FileStack } from "lucide-react";
 import { toast } from "sonner";
@@ -83,7 +83,7 @@ const Dashboard = () => {
       
       <div className="w-full max-w-7xl mx-auto relative z-10 space-y-6">
         <div className="flex justify-between items-center">
-          <img src={logo} alt="Unimaq Logo" className="h-20 w-auto" />
+          <TransparentLogo className="h-20 w-auto" alt="Unimaq Logo" />
           <div className="flex gap-3">
             <Button 
               variant="secondary" 
