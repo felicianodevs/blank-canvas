@@ -76,6 +76,12 @@ const Dashboard = () => {
     }
   };
 
+  const handleSupplierClick = (data: any) => {
+    if (data && data.name) {
+      navigate(`/supplier-details?supplier=${data.name}`);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen p-4 relative"
@@ -213,7 +219,13 @@ const Dashboard = () => {
                     }}
                     formatter={(value: number) => formatCurrency(value)}
                   />
-                  <Bar dataKey="valor" fill="hsl(var(--accent))" name="Valor Total" />
+                  <Bar 
+                    dataKey="valor" 
+                    fill="hsl(var(--accent))" 
+                    name="Valor Total"
+                    onClick={handleSupplierClick}
+                    cursor="pointer"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
