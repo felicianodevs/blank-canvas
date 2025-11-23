@@ -7,6 +7,22 @@ import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
 import { ArrowLeft, FileText, Calendar, MessageSquare, Upload } from "lucide-react";
 
+// Mapping for month abbreviations to full names
+const monthNames: { [key: string]: string } = {
+  "Jan": "JANEIRO",
+  "Fev": "FEVEREIRO",
+  "Mar": "MARÇO",
+  "Abr": "ABRIL",
+  "Mai": "MAIO",
+  "Jun": "JUNHO",
+  "Jul": "JULHO",
+  "Ago": "AGOSTO",
+  "Set": "SETEMBRO",
+  "Out": "OUTUBRO",
+  "Nov": "NOVEMBRO",
+  "Dez": "DEZEMBRO",
+};
+
 // Mock data for monthly details
 const monthlyData: { [key: string]: any[] } = {
   "Jan": [
@@ -38,6 +54,7 @@ const MonthlyHistory = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const month = searchParams.get("month") || "Jan";
+  const fullMonthName = monthNames[month] || month;
   
   const orders = monthlyData[month] || [];
 
@@ -93,7 +110,7 @@ const MonthlyHistory = () => {
               <div className="space-y-1">
                 <CardTitle className="flex items-center gap-2 text-3xl">
                   <Calendar className="w-8 h-8" />
-                  Histórico Mensal - {month}
+                  Histórico Mensal - {fullMonthName}
                 </CardTitle>
                 <CardDescription className="text-base">
                   Todos os pedidos e apontamentos do mês
