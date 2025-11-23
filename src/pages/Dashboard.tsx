@@ -139,7 +139,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={activeMonthsData} barSize={50} barCategoryGap={2}>
+                <BarChart data={activeMonthsData} barSize={60} barCategoryGap={4} barGap={0}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
                   <YAxis stroke="hsl(var(--foreground))" />
