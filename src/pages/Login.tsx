@@ -22,7 +22,7 @@ const Login = () => {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 relative"
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative"
       style={{
         backgroundImage: `url(${background})`,
         backgroundSize: 'cover',
@@ -32,13 +32,13 @@ const Login = () => {
       <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm" />
       
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-0">
-        <CardHeader className="space-y-6 text-center pb-8">
+        <CardHeader className="space-y-4 sm:space-y-6 text-center pb-6 sm:pb-8">
           <div className="flex justify-center">
-            <img src={logo} alt="Unimaq Logo" className="h-32 w-auto" />
+            <img src={logo} alt="Unimaq Logo" className="h-24 sm:h-32 w-auto" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Bem-vindo</CardTitle>
-            <CardDescription>Entre com suas credenciais</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl font-bold">Bem-vindo</CardTitle>
+            <CardDescription className="text-sm sm:text-base">Entre com suas credenciais</CardDescription>
           </div>
         </CardHeader>
         <CardContent>

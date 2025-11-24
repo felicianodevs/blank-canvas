@@ -67,13 +67,13 @@ const Orders = () => {
     >
       <div className="absolute inset-0 bg-primary/40 backdrop-blur-md" />
       
-      <div className="w-full max-w-7xl mx-auto relative z-10 space-y-6">
-        <div className="flex justify-between items-center">
-          <img src={logo} alt="Unimaq Logo" className="h-20 w-auto" />
+      <div className="w-full max-w-7xl mx-auto relative z-10 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
           <Button 
             variant="secondary" 
             onClick={() => navigate("/dashboard")}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar ao Dashboard
@@ -82,14 +82,14 @@ const Orders = () => {
 
         <Card className="shadow-2xl border-0">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold">Pedidos de Compra</CardTitle>
-            <CardDescription className="text-base">
+            <CardTitle className="text-2xl sm:text-3xl font-bold">Pedidos de Compra</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Todos os pedidos anexados e seu status
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
+          <CardContent className="px-2 sm:px-6">
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[100px]">ID</TableHead>
@@ -157,7 +157,7 @@ const Orders = () => {
       </div>
 
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Pedido #{selectedOrder?.id}</DialogTitle>
             <DialogDescription>
@@ -166,8 +166,8 @@ const Orders = () => {
           </DialogHeader>
           
           {selectedOrder && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Data</p>
                   <p className="font-medium">{new Date(selectedOrder.date).toLocaleDateString('pt-BR')}</p>

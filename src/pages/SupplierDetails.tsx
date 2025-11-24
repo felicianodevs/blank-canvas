@@ -86,13 +86,13 @@ const SupplierDetails = () => {
     >
       <div className="absolute inset-0 bg-primary/40 backdrop-blur-md" />
       
-      <div className="w-full max-w-7xl mx-auto relative z-10 space-y-6">
-        <div className="flex justify-between items-center">
-          <img src={logo} alt="Unimaq Logo" className="h-20 w-auto" />
+      <div className="w-full max-w-7xl mx-auto relative z-10 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
           <Button 
             variant="secondary" 
             onClick={() => navigate("/dashboard")}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar ao Dashboard
@@ -101,15 +101,15 @@ const SupplierDetails = () => {
 
         <Card className="shadow-2xl border-0">
           <CardHeader>
-            <CardTitle className="text-3xl">{supplierName}</CardTitle>
-            <CardDescription className="text-base">
+            <CardTitle className="text-2xl sm:text-3xl">{supplierName}</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Histórico completo de pedidos do fornecedor
             </CardDescription>
           </CardHeader>
         </Card>
 
         {/* Resumo de Valores */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="shadow-xl border-0">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -173,8 +173,8 @@ const SupplierDetails = () => {
               </CardTitle>
               <CardDescription>Pedidos finalizados e já entregues à empresa</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Table>
+            <CardContent className="px-2 sm:px-6 overflow-x-auto">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
@@ -210,8 +210,8 @@ const SupplierDetails = () => {
               </CardTitle>
               <CardDescription>Pedidos finalizados aguardando entrega</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Table>
+            <CardContent className="px-2 sm:px-6 overflow-x-auto">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
@@ -247,8 +247,8 @@ const SupplierDetails = () => {
               </CardTitle>
               <CardDescription>Pedidos ainda não finalizados</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Table>
+            <CardContent className="px-2 sm:px-6 overflow-x-auto">
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
