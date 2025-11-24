@@ -47,7 +47,7 @@ const Register = () => {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 relative py-12"
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative py-8 sm:py-12"
       style={{
         backgroundImage: `url(${background})`,
         backgroundSize: 'cover',
@@ -57,13 +57,13 @@ const Register = () => {
       <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm" />
       
       <Card className="w-full max-w-2xl relative z-10 shadow-2xl border-0">
-        <CardHeader className="space-y-4 text-center">
+        <CardHeader className="space-y-3 sm:space-y-4 text-center">
           <div className="flex justify-center">
-            <img src={logo} alt="Unimaq Logo" className="h-24 w-auto" />
+            <img src={logo} alt="Unimaq Logo" className="h-20 sm:h-24 w-auto" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
-            <CardDescription>Preencha os dados para se cadastrar</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl font-bold">Criar Conta</CardTitle>
+            <CardDescription className="text-sm sm:text-base">Preencha os dados para se cadastrar</CardDescription>
           </div>
         </CardHeader>
         <CardContent>

@@ -103,22 +103,23 @@ const Dashboard = () => {
     >
       <div className="absolute inset-0 bg-primary/40 backdrop-blur-md" />
       
-      <div className="w-full max-w-7xl mx-auto relative z-10 space-y-6">
-        <div className="flex justify-between items-center">
-          <img src={logo} alt="Unimaq Logo" className="h-20 w-auto" />
-          <div className="flex gap-3">
+      <div className="w-full max-w-7xl mx-auto relative z-10 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <Button 
               variant="secondary" 
               onClick={() => navigate("/orders")}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
             >
               <FileStack className="w-4 h-4" />
-              Ver Todos os Pedidos
+              <span className="hidden sm:inline">Ver Todos os Pedidos</span>
+              <span className="sm:hidden">Pedidos</span>
             </Button>
             <Button 
               variant="secondary" 
               onClick={handleLogout}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
             >
               <LogOut className="w-4 h-4" />
               Sair
@@ -127,7 +128,7 @@ const Dashboard = () => {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Monthly Orders Chart */}
           <Card className="shadow-2xl border-0">
             <CardHeader>
@@ -138,7 +139,7 @@ const Dashboard = () => {
               <CardDescription>Total de pedidos realizados nos últimos meses</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px]">
                 <BarChart data={activeMonthsData} barSize={80} barCategoryGap="1%" barGap={0}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
@@ -173,7 +174,7 @@ const Dashboard = () => {
               <CardDescription>Total em reais gastos por mês</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px]">
                 <LineChart data={activeMonthsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
@@ -212,7 +213,7 @@ const Dashboard = () => {
               <CardDescription>Total de compras por fornecedor no mês</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px]">
                 <BarChart data={supplierData} layout="vertical" barSize={30}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis 
@@ -220,7 +221,7 @@ const Dashboard = () => {
                     stroke="hsl(var(--foreground))"
                     tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
                   />
-                  <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={120} />
+                  <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={80} className="text-xs sm:text-sm" />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: "hsl(var(--card))", 
@@ -251,7 +252,7 @@ const Dashboard = () => {
               <CardDescription>Distribuição dos pedidos por status</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px]">
                 <PieChart>
                   <Pie
                     data={statusData}
