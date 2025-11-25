@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Package, DollarSign, TrendingUp, ArrowUpDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { X, Package, DollarSign, TrendingUp, ArrowUpDown, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +18,8 @@ interface Order {
   delivery_status: string;
   supplier_id: string;
   supplier_name: string;
+  photo_url: string | null;
+  photo_name: string | null;
 }
 
 interface OrdersSummaryProps {
@@ -29,6 +32,7 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
   const [loading, setLoading] = useState(true);
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [dateSort, setDateSort] = useState<"asc" | "desc">("desc");
+  const [selectedPhoto, setSelectedPhoto] = useState<{ url: string; orderNumber: number } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,6 +50,8 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
           status,
           delivery_status,
           supplier_id,
+          photo_url,
+          photo_name,
           suppliers (
             name
           )
@@ -61,7 +67,9 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
         status: order.status,
         delivery_status: order.delivery_status || 'enviado',
         supplier_id: order.supplier_id,
-        supplier_name: order.suppliers?.name || 'N/A'
+        supplier_name: order.suppliers?.name || 'N/A',
+        photo_url: order.photo_url,
+        photo_name: order.photo_name
       }));
 
       setOrders(formattedOrders);
@@ -118,74 +126,103 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
     setDateSort(prev => prev === "asc" ? "desc" : "asc");
   };
 
-  const renderOrdersTable = (ordersList: Order[], statusColor: string) => (
-    <div className="rounded-md border overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={toggleDateSort}
-                className="h-8 px-2"
-              >
-                Data
-                <ArrowUpDown className="ml-2 h-3 w-3" />
-              </Button>
-            </TableHead>
-            <TableHead>Fornecedor</TableHead>
-            <TableHead className="text-right">Valor</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
+  const renderOrdersTable = (ordersList: Order[], statusColor: string) => {
+    // Calculate order number based on position in the full orders list
+    const getOrderNumber = (orderId: string) => {
+      return orders.findIndex(o => o.id === orderId) + 1;
+    };
+
+    return (
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8">
-                Carregando...
-              </TableCell>
+              <TableHead>Pedido</TableHead>
+              <TableHead>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={toggleDateSort}
+                  className="h-8 px-2"
+                >
+                  Data
+                  <ArrowUpDown className="ml-2 h-3 w-3" />
+                </Button>
+              </TableHead>
+              <TableHead>Fornecedor</TableHead>
+              <TableHead className="text-right">Valor</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
-          ) : ordersList.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                Nenhum pedido encontrado
-              </TableCell>
-            </TableRow>
-          ) : (
-            ordersList.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">
-                  #{order.id.substring(0, 8)}
-                </TableCell>
-                <TableCell>
-                  {new Date(order.order_date).toLocaleDateString('pt-BR')}
-                </TableCell>
-                <TableCell>{order.supplier_name}</TableCell>
-                <TableCell className="text-right font-medium">
-                  {formatCurrency(order.value)}
-                </TableCell>
-                <TableCell>
-                  <Badge 
-                    className={statusColor}
-                  >
-                    {order.delivery_status === 'enviado' ? 'Enviado' : 
-                     order.delivery_status === 'a_receber' ? 'A Receber' : 
-                     'Entregue'}
-                  </Badge>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  Carregando...
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
+            ) : ordersList.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  Nenhum pedido encontrado
+                </TableCell>
+              </TableRow>
+            ) : (
+              ordersList.map((order) => {
+                const orderNumber = getOrderNumber(order.id);
+                return (
+                  <TableRow key={order.id}>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="font-medium hover:bg-primary/10"
+                        onClick={() => {
+                          if (order.photo_url) {
+                            setSelectedPhoto({ url: order.photo_url, orderNumber });
+                          } else {
+                            toast({
+                              title: "Sem foto",
+                              description: "Este pedido não possui foto anexada.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        <ImageIcon className="mr-2 h-4 w-4" />
+                        Pedido {orderNumber}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(order.order_date).toLocaleDateString('pt-BR')}
+                    </TableCell>
+                    <TableCell>{order.supplier_name}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(order.value)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={statusColor}
+                      >
+                        {order.delivery_status === 'enviado' ? 'Enviado' : 
+                         order.delivery_status === 'a_receber' ? 'A Receber' : 
+                         'Entregue'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl border-0">
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl border-0">
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
             <div>
@@ -296,6 +333,25 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
         </CardContent>
       </Card>
     </div>
+
+    {/* Photo Dialog */}
+    <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>Foto do Pedido {selectedPhoto?.orderNumber}</DialogTitle>
+        </DialogHeader>
+        <div className="flex items-center justify-center p-4 bg-muted/30 rounded-lg overflow-auto max-h-[70vh]">
+          {selectedPhoto && (
+            <img 
+              src={selectedPhoto.url} 
+              alt={`Pedido ${selectedPhoto.orderNumber}`}
+              className="max-w-full h-auto object-contain rounded-lg"
+            />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
