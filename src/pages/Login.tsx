@@ -16,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showLogoSpinning, setShowLogoSpinning] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const getOrCreateUserRole = async (
@@ -99,17 +100,23 @@ const Login = () => {
         authData.user.user_metadata
       );
 
-      // Show success modal
-      setShowSuccess(true);
+      // Show logo spinning animation
+      setShowLogoSpinning(true);
       
-      // Redirect after 2 seconds
+      // After 4 seconds, show success message
       setTimeout(() => {
-        if (role === "empresa") {
-          navigate("/dashboard");
-        } else if (role === "fornecedor") {
-          navigate("/supplier-dashboard");
-        }
-      }, 2000);
+        setShowLogoSpinning(false);
+        setShowSuccess(true);
+        
+        // After 2 more seconds, redirect
+        setTimeout(() => {
+          if (role === "empresa") {
+            navigate("/dashboard");
+          } else if (role === "fornecedor") {
+            navigate("/supplier-dashboard");
+          }
+        }, 2000);
+      }, 4000);
     } catch (error: any) {
       console.error("Login error:", error);
       setErrorMessage("VOCÊ ERROU A Senha ou o Email tente novamente");
@@ -182,6 +189,15 @@ const Login = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Logo Spinning Animation */}
+      {showLogoSpinning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="animate-spin" style={{ animationDuration: '1s' }}>
+            <img src={logo} alt="Unimaq Logo" className="h-32 w-auto" />
+          </div>
+        </div>
+      )}
 
       {/* Success Modal */}
       {showSuccess && (
