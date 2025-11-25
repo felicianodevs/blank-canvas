@@ -33,6 +33,7 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [dateSort, setDateSort] = useState<"asc" | "desc">("desc");
   const [selectedPhoto, setSelectedPhoto] = useState<{ url: string; orderNumber: number } | null>(null);
+  const [showNoPhotoDialog, setShowNoPhotoDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -181,11 +182,7 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
                           if (order.photo_url) {
                             setSelectedPhoto({ url: order.photo_url, orderNumber });
                           } else {
-                            toast({
-                              title: "Sem foto",
-                              description: "Este pedido não possui foto anexada.",
-                              variant: "destructive",
-                            });
+                            setShowNoPhotoDialog(true);
                           }
                         }}
                       >
@@ -348,6 +345,26 @@ const OrdersSummary = ({ onClose }: OrdersSummaryProps) => {
               className="max-w-full h-auto object-contain rounded-lg"
             />
           )}
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* No Photo Dialog */}
+    <Dialog open={showNoPhotoDialog} onOpenChange={setShowNoPhotoDialog}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center">Sem Foto Anexada</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col items-center justify-center py-8">
+          <ImageIcon className="w-16 h-16 text-muted-foreground mb-4" />
+          <p className="text-center text-lg font-medium">
+            Este pedido não contém foto anexada
+          </p>
+        </div>
+        <div className="flex justify-center">
+          <Button onClick={() => setShowNoPhotoDialog(false)}>
+            Fechar
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
