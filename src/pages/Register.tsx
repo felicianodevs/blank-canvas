@@ -80,11 +80,6 @@ const Register = () => {
         throw new Error("Erro ao criar usuário");
       }
 
-      // Check if user already exists (user_repeated_signup case)
-      if (authData.user && !authData.session) {
-        throw new Error("Este email já está cadastrado. Por favor, faça login ao invés de registrar novamente.");
-      }
-
       // Wait for the trigger to execute and create the profile
       await new Promise(resolve => setTimeout(resolve, 1000));
 
