@@ -80,25 +80,19 @@ const Register = () => {
         throw new Error("Erro ao criar usuário");
       }
 
-      // Wait a moment for the trigger to execute
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for the trigger to execute and create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Upsert profile data (trigger should create it, but we ensure all fields are set)
+      // Update only the additional fields (trigger creates the base profile)
       const { error: profileError } = await supabase
         .from("profiles")
-        .upsert({
-          id: authData.user.id,
-          nome: formData.nome,
-          email: formData.email,
-          empresa: formData.empresa,
-          cnpj: formData.cnpj,
+        .update({
           telefone: formData.telefone,
           endereco: formData.endereco,
           cidade: formData.cidade,
           estado: formData.estado,
-        }, {
-          onConflict: 'id'
-        });
+        })
+        .eq("id", authData.user.id);
 
       if (profileError) throw profileError;
 
