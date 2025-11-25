@@ -89,14 +89,15 @@ const SupplierDashboard = () => {
         .from("purchase_orders")
         .getPublicUrl(filePath);
 
-      // Insert order record
+      // Insert order record with "enviado" status
       const { error: insertError } = await supabase
         .from("orders")
         .insert({
           supplier_id: supplierData.id,
           file_url: publicUrl,
           file_name: selectedFile.name,
-          status: "pendente",
+          status: "enviado",
+          delivery_status: "enviado",
           value: 0, // User can update this later
         });
 
