@@ -70,6 +70,11 @@ const Register = () => {
             nome: formData.nome,
             empresa: formData.empresa,
             cnpj: formData.cnpj,
+            telefone: formData.telefone,
+            endereco: formData.endereco,
+            cidade: formData.cidade,
+            estado: formData.estado,
+            userType: formData.userType,
           },
         },
       });
@@ -78,47 +83,6 @@ const Register = () => {
 
       if (!authData.user) {
         throw new Error("Erro ao criar usuário");
-      }
-
-      // Wait for the trigger to execute and create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update only the additional fields (trigger creates the base profile)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          telefone: formData.telefone,
-          endereco: formData.endereco,
-          cidade: formData.cidade,
-          estado: formData.estado,
-        })
-        .eq("id", authData.user.id);
-
-      if (profileError) throw profileError;
-
-      // Upsert user role to avoid duplicate errors
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .upsert({
-          user_id: authData.user.id,
-          role: formData.userType,
-        }, {
-          onConflict: 'user_id,role'
-        });
-
-      if (roleError) throw roleError;
-
-      // If user is a supplier, create supplier record
-      if (formData.userType === "fornecedor") {
-        const { error: supplierError } = await supabase
-          .from("suppliers")
-          .insert({
-            user_id: authData.user.id,
-            name: formData.empresa,
-            cnpj: formData.cnpj,
-          });
-
-        if (supplierError) throw supplierError;
       }
 
       toast({
