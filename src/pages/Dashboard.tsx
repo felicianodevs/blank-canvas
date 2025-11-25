@@ -155,7 +155,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px]">
-                <BarChart data={activeMonthsData} barSize={80} barCategoryGap="1%" barGap={0}>
+                <BarChart data={activeMonthsData} barSize={60} barCategoryGap="15%" barGap={2}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
                   <YAxis stroke="hsl(var(--foreground))" />
@@ -229,7 +229,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px]">
-                <BarChart data={supplierData} layout="vertical" barSize={30}>
+                <BarChart data={supplierData} layout="vertical" barSize={25}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis 
                     type="number" 
