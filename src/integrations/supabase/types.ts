@@ -23,6 +23,8 @@ export type Database = {
           id: string
           observation: string | null
           order_date: string | null
+          photo_name: string | null
+          photo_url: string | null
           status: string | null
           supplier_id: string | null
           value: number | null
@@ -35,6 +37,8 @@ export type Database = {
           id?: string
           observation?: string | null
           order_date?: string | null
+          photo_name?: string | null
+          photo_url?: string | null
           status?: string | null
           supplier_id?: string | null
           value?: number | null
@@ -47,6 +51,8 @@ export type Database = {
           id?: string
           observation?: string | null
           order_date?: string | null
+          photo_name?: string | null
+          photo_url?: string | null
           status?: string | null
           supplier_id?: string | null
           value?: number | null
