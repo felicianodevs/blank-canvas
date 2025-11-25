@@ -64,14 +64,36 @@ const SupplierDashboard = () => {
     setUploading(true);
 
     try {
-      // Get supplier ID
-      const { data: supplierData, error: supplierError } = await supabase
+      // Get or create supplier ID
+      let { data: supplierData, error: supplierError } = await supabase
         .from("suppliers")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (supplierError) throw supplierError;
+
+      // If supplier doesn't exist, create it
+      if (!supplierData) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("empresa, cnpj")
+          .eq("id", user.id)
+          .single();
+
+        const { data: newSupplier, error: createError } = await supabase
+          .from("suppliers")
+          .insert({
+            user_id: user.id,
+            name: profileData?.empresa || "Fornecedor",
+            cnpj: profileData?.cnpj || "",
+          })
+          .select("id")
+          .single();
+
+        if (createError) throw createError;
+        supplierData = newSupplier;
+      }
 
       // Upload file to storage
       const fileExt = selectedFile.name.split('.').pop();
