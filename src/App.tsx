@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import SupplierDashboard from "./pages/SupplierDashboard";
 import Orders from "./pages/Orders";
 import MonthlyHistory from "./pages/MonthlyHistory";
 import SupplierDetails from "./pages/SupplierDetails";
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/monthly-history" element={<MonthlyHistory />} />
           <Route path="/supplier-details" element={<SupplierDetails />} />

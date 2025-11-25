@@ -4,12 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
-import { toast } from "sonner";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -21,6 +25,7 @@ const Register = () => {
     estado: "",
     senha: "",
     confirmarSenha: "",
+    userType: "empresa" as "empresa" | "fornecedor",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,19 +35,105 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.senha !== formData.confirmarSenha) {
-      toast.error("As senhas não coincidem");
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
       return;
     }
 
-    // Simulate registration
-    toast.success("Cadastro realizado com sucesso!");
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 1500);
+    if (formData.senha.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter no mínimo 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Create user account with Supabase Auth
+      const redirectUrl = `${window.location.origin}/`;
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.senha,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            nome: formData.nome,
+            empresa: formData.empresa,
+            cnpj: formData.cnpj,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      if (!authData.user) {
+        throw new Error("Erro ao criar usuário");
+      }
+
+      // Save additional profile data
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          telefone: formData.telefone,
+          endereco: formData.endereco,
+          cidade: formData.cidade,
+          estado: formData.estado,
+        })
+        .eq("id", authData.user.id);
+
+      if (profileError) throw profileError;
+
+      // Save user role
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({
+          user_id: authData.user.id,
+          role: formData.userType,
+        });
+
+      if (roleError) throw roleError;
+
+      // If user is a supplier, create supplier record
+      if (formData.userType === "fornecedor") {
+        const { error: supplierError } = await supabase
+          .from("suppliers")
+          .insert({
+            user_id: authData.user.id,
+            name: formData.empresa,
+            cnpj: formData.cnpj,
+          });
+
+        if (supplierError) throw supplierError;
+      }
+
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: "Você será redirecionado para o login.",
+      });
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Erro ao cadastrar",
+        description: error.message || "Ocorreu um erro ao criar sua conta. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,6 +159,30 @@ const Register = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-3">
+              <Label>Tipo de Usuário *</Label>
+              <RadioGroup
+                value={formData.userType}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, userType: value as "empresa" | "fornecedor" })
+                }
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="empresa" id="empresa" />
+                  <Label htmlFor="empresa" className="cursor-pointer font-normal">
+                    Empresa
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="fornecedor" id="fornecedor" />
+                  <Label htmlFor="fornecedor" className="cursor-pointer font-normal">
+                    Fornecedor
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome Completo *</Label>
@@ -160,6 +275,7 @@ const Register = () => {
                   value={formData.senha}
                   onChange={handleChange}
                   required
+                  minLength={6}
                 />
               </div>
               <div className="space-y-2">
@@ -171,11 +287,12 @@ const Register = () => {
                   value={formData.confirmarSenha}
                   onChange={handleChange}
                   required
+                  minLength={6}
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full" size="lg">
-              Cadastrar
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Cadastrando..." : "Cadastrar"}
             </Button>
             <div className="text-center pt-2">
               <p className="text-sm text-muted-foreground">
