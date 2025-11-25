@@ -1,22 +1,87 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (roleData?.role === "empresa") {
+          navigate("/dashboard");
+        } else if (roleData?.role === "fornecedor") {
+          navigate("/supplier-dashboard");
+        }
+      }
+    };
+    checkUser();
+  }, [navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login - in production, validate credentials
-    if (email && password) {
-      navigate("/dashboard");
+    setLoading(true);
+
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      if (!authData.user) {
+        throw new Error("Erro ao fazer login");
+      }
+
+      // Get user role
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authData.user.id)
+        .single();
+
+      if (roleError) throw roleError;
+
+      // Redirect based on role
+      if (roleData.role === "empresa") {
+        navigate("/dashboard");
+      } else if (roleData.role === "fornecedor") {
+        navigate("/supplier-dashboard");
+      }
+
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo ao sistema.",
+      });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        title: "Erro ao fazer login",
+        description: error.message || "Verifique suas credenciais e tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,8 +130,8 @@ const Login = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" size="lg">
-              Entrar
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
             </Button>
             <div className="text-center pt-4">
               <p className="text-sm text-muted-foreground">
