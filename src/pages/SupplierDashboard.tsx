@@ -25,6 +25,7 @@ const SupplierDashboard = () => {
   const { toast } = useToast();
   const { logout, loading: authLoading, user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
 
@@ -38,6 +39,12 @@ const SupplierDashboard = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedPhoto(e.target.files[0]);
     }
   };
 
@@ -106,10 +113,32 @@ const SupplierDashboard = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL for file
       const { data: { publicUrl } } = supabase.storage
         .from("purchase_orders")
         .getPublicUrl(filePath);
+
+      // Upload photo if selected
+      let photoUrl = null;
+      let photoName = null;
+      if (selectedPhoto) {
+        const photoExt = selectedPhoto.name.split('.').pop();
+        const photoFileName = `photo-${user.id}-${Date.now()}.${photoExt}`;
+        const photoFilePath = `${photoFileName}`;
+
+        const { error: photoUploadError } = await supabase.storage
+          .from("purchase_orders")
+          .upload(photoFilePath, selectedPhoto);
+
+        if (photoUploadError) throw photoUploadError;
+
+        const { data: { publicUrl: photoPublicUrl } } = supabase.storage
+          .from("purchase_orders")
+          .getPublicUrl(photoFilePath);
+
+        photoUrl = photoPublicUrl;
+        photoName = selectedPhoto.name;
+      }
 
       // Insert order record with "enviado" status
       const { error: insertError } = await supabase
@@ -118,6 +147,8 @@ const SupplierDashboard = () => {
           supplier_id: supplierData.id,
           file_url: publicUrl,
           file_name: selectedFile.name,
+          photo_url: photoUrl,
+          photo_name: photoName,
           status: "enviado",
           delivery_status: "enviado",
           value: 0, // User can update this later
@@ -127,12 +158,15 @@ const SupplierDashboard = () => {
 
       toast({
         title: "Pedido enviado ao fornecedor",
-        description: `${selectedFile.name} foi enviado com sucesso.`,
+        description: `${selectedFile.name}${selectedPhoto ? ' e foto' : ''} enviado com sucesso.`,
       });
       
       setSelectedFile(null);
+      setSelectedPhoto(null);
       const fileInput = document.getElementById('file') as HTMLInputElement;
+      const photoInput = document.getElementById('photo') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
+      if (photoInput) photoInput.value = '';
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({
@@ -280,6 +314,27 @@ const SupplierDashboard = () => {
                   {selectedFile && (
                     <p className="text-sm text-muted-foreground">
                       Arquivo selecionado: {selectedFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="photo">Anexar foto (opcional)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="photo"
+                      type="file"
+                      onChange={handlePhotoChange}
+                      accept="image/*"
+                      className="flex-1"
+                    />
+                    {selectedPhoto && (
+                      <FileText className="h-5 w-5 text-primary" />
+                    )}
+                  </div>
+                  {selectedPhoto && (
+                    <p className="text-sm text-muted-foreground">
+                      Foto selecionada: {selectedPhoto.name}
                     </p>
                   )}
                 </div>
