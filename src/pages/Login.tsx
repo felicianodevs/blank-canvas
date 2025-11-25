@@ -58,9 +58,13 @@ const Login = () => {
         .from("user_roles")
         .select("role")
         .eq("user_id", authData.user.id)
-        .single();
+        .maybeSingle();
 
       if (roleError) throw roleError;
+
+      if (!roleData) {
+        throw new Error("Papel de usuário não encontrado. Entre em contato com o suporte.");
+      }
 
       // Redirect based on role
       if (roleData.role === "empresa") {
