@@ -80,6 +80,11 @@ const Register = () => {
         throw new Error("Erro ao criar usuário");
       }
 
+      // Check if user already exists (user_repeated_signup case)
+      if (authData.user && !authData.session) {
+        throw new Error("Este email já está cadastrado. Por favor, faça login ao invés de registrar novamente.");
+      }
+
       // Wait for the trigger to execute and create the profile
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -96,12 +101,14 @@ const Register = () => {
 
       if (profileError) throw profileError;
 
-      // Save user role
+      // Upsert user role to avoid duplicate errors
       const { error: roleError } = await supabase
         .from("user_roles")
-        .insert({
+        .upsert({
           user_id: authData.user.id,
           role: formData.userType,
+        }, {
+          onConflict: 'user_id,role'
         });
 
       if (roleError) throw roleError;
