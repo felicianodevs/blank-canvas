@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
-import { Upload, FileText, LogOut, BarChart3, FileStack } from "lucide-react";
+import { Upload, FileText, LogOut, BarChart3, FileStack, ClipboardList, X } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import OrdersSummary from "./OrdersSummary";
 
 // Mock data for charts
 const monthlyOrdersData = [
@@ -43,6 +45,9 @@ const statusData = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showOrdersSummary, setShowOrdersSummary] = useState(false);
+  const [showMonthModal, setShowMonthModal] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
   // Filter only months with orders
   const activeMonthsData = monthlyOrdersData.filter(month => month.pedidos > 0);
@@ -56,7 +61,7 @@ const Dashboard = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedFile) {
-      toast.success(`Pedido "${selectedFile.name}" enviado com sucesso!`);
+      toast.success("Pedido enviado ao fornecedor");
       setSelectedFile(null);
       // Reset the file input
       const fileInput = document.getElementById('fileInput') as HTMLInputElement;
@@ -82,7 +87,8 @@ const Dashboard = () => {
 
   const handleBarClick = (data: any) => {
     if (data && data.month) {
-      navigate(`/monthly-history?month=${data.month}`);
+      setSelectedMonth(data.month);
+      setShowMonthModal(true);
     }
   };
 
@@ -107,6 +113,15 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button 
+              variant="secondary" 
+              onClick={() => setShowOrdersSummary(true)}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span className="hidden sm:inline">Resumo</span>
+              <span className="sm:hidden">Resumo</span>
+            </Button>
             <Button 
               variant="secondary" 
               onClick={() => navigate("/orders")}
@@ -335,6 +350,86 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Orders Summary Modal */}
+      {showOrdersSummary && <OrdersSummary onClose={() => setShowOrdersSummary(false)} />}
+
+      {/* Monthly Billing Modal */}
+      {showMonthModal && selectedMonth && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border-0">
+            <CardHeader className="border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl font-bold">Faturamentos de {selectedMonth}</CardTitle>
+                  <CardDescription>Todos os pedidos e valores do mês</CardDescription>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setShowMonthModal(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {activeMonthsData.find(m => m.month === selectedMonth)?.pedidos || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-primary">
+                        {formatCurrency(activeMonthsData.find(m => m.month === selectedMonth)?.valor || 0)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Pedido</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Fornecedor</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">#001</TableCell>
+                        <TableCell>15/01/2025</TableCell>
+                        <TableCell>Fornecedor ABC</TableCell>
+                        <TableCell className="text-right">{formatCurrency(15000)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">#002</TableCell>
+                        <TableCell>18/01/2025</TableCell>
+                        <TableCell>Fornecedor XYZ</TableCell>
+                        <TableCell className="text-right">{formatCurrency(8500)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">#003</TableCell>
+                        <TableCell>20/01/2025</TableCell>
+                        <TableCell>Fornecedor DEF</TableCell>
+                        <TableCell className="text-right">{formatCurrency(22000)}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

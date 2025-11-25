@@ -92,9 +92,9 @@ const Orders = () => {
               <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">ID</TableHead>
-                    <TableHead>
-                      <div className="flex items-center gap-2">
+                    <TableHead className="w-[80px]">ID</TableHead>
+                    <TableHead className="w-[120px]">
+                      <div className="flex items-center gap-1">
                         Data
                         <Button 
                           variant="ghost" 
@@ -106,43 +106,44 @@ const Orders = () => {
                         </Button>
                       </div>
                     </TableHead>
-                    <TableHead>Fornecedor</TableHead>
-                    <TableHead>Arquivo</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead className="max-w-[150px]">Fornecedor</TableHead>
+                    <TableHead className="max-w-[200px]">Arquivo</TableHead>
+                    <TableHead className="text-right w-[120px]">Valor</TableHead>
+                    <TableHead className="w-[100px]">Status</TableHead>
+                    <TableHead className="text-right w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedOrders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">#{order.id}</TableCell>
-                      <TableCell>{new Date(order.date).toLocaleDateString('pt-BR')}</TableCell>
-                      <TableCell>{order.supplier}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-sm">{new Date(order.date).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell className="truncate max-w-[150px]">{order.supplier}</TableCell>
+                      <TableCell className="truncate max-w-[200px]">
                         <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm">{order.file}</span>
+                          <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm truncate">{order.file}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-medium text-sm">
                         {formatCurrency(order.value)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={statusLabels[order.status].variant}>
+                        <Badge variant={statusLabels[order.status].variant} className="text-xs">
                           {statusLabels[order.status].label}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
                           <Button 
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleViewOrder(order)}
+                            className="h-8 w-8 p-0"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <Download className="w-4 h-4" />
                           </Button>
                         </div>

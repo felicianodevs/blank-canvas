@@ -15,6 +15,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const getOrCreateUserRole = async (
     userId: string,
@@ -77,6 +79,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
 
     try {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -96,24 +99,20 @@ const Login = () => {
         authData.user.user_metadata
       );
 
-      // Redirect based on role
-      if (role === "empresa") {
-        navigate("/dashboard");
-      } else if (role === "fornecedor") {
-        navigate("/supplier-dashboard");
-      }
-
-      toast({
-        title: "Login realizado!",
-        description: "Bem-vindo ao sistema.",
-      });
+      // Show success modal
+      setShowSuccess(true);
+      
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        if (role === "empresa") {
+          navigate("/dashboard");
+        } else if (role === "fornecedor") {
+          navigate("/supplier-dashboard");
+        }
+      }, 2000);
     } catch (error: any) {
       console.error("Login error:", error);
-      toast({
-        title: "Erro ao fazer login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
-        variant: "destructive",
-      });
+      setErrorMessage("VOCÊ ERROU A Senha ou o Email tente novamente");
     } finally {
       setLoading(false);
     }
@@ -141,6 +140,11 @@ const Login = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {errorMessage && (
+            <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-lg">
+              <p className="text-destructive text-center font-medium">{errorMessage}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
@@ -178,6 +182,35 @@ const Login = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4 shadow-2xl border-0 animate-in fade-in zoom-in">
+            <CardContent className="pt-6 pb-6 text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-10 h-10 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-foreground">Login efetuado com sucesso</h3>
+                <p className="text-muted-foreground mt-2">Bem vindo!</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Upload, FileText, LogOut } from "lucide-react";
+import { Upload, FileText, LogOut, ClipboardList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
+import OrdersSummary from "./OrdersSummary";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("pt-BR", {
@@ -21,8 +23,10 @@ const formatCurrency = (value: number) => {
 const SupplierDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { logout, loading: authLoading } = useAuth();
+  const { logout, loading: authLoading, user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [showOrdersSummary, setShowOrdersSummary] = useState(false);
 
   // Mock data - will be replaced with real data from Supabase
   const monthlyData = [
@@ -37,20 +41,84 @@ const SupplierDashboard = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedFile) {
-      toast({
-        title: "Arquivo enviado!",
-        description: `${selectedFile.name} foi carregado com sucesso.`,
-      });
-      setSelectedFile(null);
-    } else {
+    if (!selectedFile) {
       toast({
         title: "Erro",
         description: "Por favor, selecione um arquivo.",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Get supplier ID
+      const { data: supplierData, error: supplierError } = await supabase
+        .from("suppliers")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (supplierError) throw supplierError;
+
+      // Upload file to storage
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("purchase_orders")
+        .upload(filePath, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("purchase_orders")
+        .getPublicUrl(filePath);
+
+      // Insert order record
+      const { error: insertError } = await supabase
+        .from("orders")
+        .insert({
+          supplier_id: supplierData.id,
+          file_url: publicUrl,
+          file_name: selectedFile.name,
+          status: "pendente",
+          value: 0, // User can update this later
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Pedido enviado ao fornecedor",
+        description: `${selectedFile.name} foi enviado com sucesso.`,
+      });
+      
+      setSelectedFile(null);
+      const fileInput = document.getElementById('file') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast({
+        title: "Erro ao enviar",
+        description: error.message || "Ocorreu um erro ao enviar o arquivo.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -81,6 +149,14 @@ const SupplierDashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowOrdersSummary(true)}
+              className="bg-background/80 hover:bg-background"
+            >
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Resumo
+            </Button>
             <Button 
               variant="outline" 
               onClick={handleLogout}
@@ -185,15 +261,18 @@ const SupplierDashboard = () => {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" disabled={uploading}>
                   <Upload className="mr-2 h-4 w-4" />
-                  Enviar Pedido
+                  {uploading ? "Enviando..." : "Enviar Pedido"}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Orders Summary Modal */}
+      {showOrdersSummary && <OrdersSummary onClose={() => setShowOrdersSummary(false)} />}
     </div>
   );
 };
