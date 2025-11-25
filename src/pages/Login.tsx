@@ -16,22 +16,59 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const getOrCreateUserRole = async (
+    userId: string,
+    userMetadata?: Record<string, any>
+  ): Promise<"empresa" | "fornecedor"> => {
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (roleError) {
+      throw roleError;
+    }
+
+    if (roleData?.role) {
+      return roleData.role as "empresa" | "fornecedor";
+    }
+
+    const metadataRole =
+      (userMetadata?.userType as "empresa" | "fornecedor" | undefined) ?? "fornecedor";
+
+    const { data: newRoleData, error: insertError } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role: metadataRole })
+      .select("role")
+      .single();
+
+    if (insertError || !newRoleData?.role) {
+      throw insertError || new Error("Não foi possível definir o papel do usuário.");
+    }
+
+    return newRoleData.role as "empresa" | "fornecedor";
+  };
+
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .single();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const role = await getOrCreateUserRole(
+            session.user.id,
+            session.user.user_metadata
+          );
 
-        if (roleData?.role === "empresa") {
-          navigate("/dashboard");
-        } else if (roleData?.role === "fornecedor") {
-          navigate("/supplier-dashboard");
+          if (role === "empresa") {
+            navigate("/dashboard");
+          } else if (role === "fornecedor") {
+            navigate("/supplier-dashboard");
+          }
         }
+      } catch (error) {
+        console.error("Erro ao verificar sessão do usuário:", error);
       }
     };
     checkUser();
@@ -53,23 +90,16 @@ const Login = () => {
         throw new Error("Erro ao fazer login");
       }
 
-      // Get user role
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", authData.user.id)
-        .maybeSingle();
-
-      if (roleError) throw roleError;
-
-      if (!roleData) {
-        throw new Error("Papel de usuário não encontrado. Entre em contato com o suporte.");
-      }
+      // Get or create user role based on metadata
+      const role = await getOrCreateUserRole(
+        authData.user.id,
+        authData.user.user_metadata
+      );
 
       // Redirect based on role
-      if (roleData.role === "empresa") {
+      if (role === "empresa") {
         navigate("/dashboard");
-      } else if (roleData.role === "fornecedor") {
+      } else if (role === "fornecedor") {
         navigate("/supplier-dashboard");
       }
 
