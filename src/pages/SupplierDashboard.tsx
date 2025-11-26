@@ -28,13 +28,25 @@ const SupplierDashboard = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
+  const [testMonths, setTestMonths] = useState(3);
 
   // Mock data - will be replaced with real data from Supabase
-  const monthlyData = [
+  const allMonthlyData = [
     { month: "Jan", value: 45000 },
     { month: "Fev", value: 52000 },
     { month: "Mar", value: 48000 },
+    { month: "Abr", value: 42000 },
+    { month: "Mai", value: 55000 },
+    { month: "Jun", value: 49000 },
+    { month: "Jul", value: 51000 },
+    { month: "Ago", value: 47000 },
+    { month: "Set", value: 53000 },
+    { month: "Out", value: 46000 },
+    { month: "Nov", value: 50000 },
+    { month: "Dez", value: 54000 },
   ];
+
+  const monthlyData = allMonthlyData.slice(0, testMonths);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -274,8 +286,35 @@ const SupplierDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-background/95 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
-              <CardTitle>Faturamento Mensal</CardTitle>
-              <CardDescription>Valores por mês (R$)</CardDescription>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                <div>
+                  <CardTitle>Faturamento Mensal</CardTitle>
+                  <CardDescription>Valores por mês (R$)</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant={testMonths === 6 ? "default" : "outline"}
+                    onClick={() => setTestMonths(6)}
+                  >
+                    6 meses
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={testMonths === 8 ? "default" : "outline"}
+                    onClick={() => setTestMonths(8)}
+                  >
+                    8 meses
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={testMonths === 12 ? "default" : "outline"}
+                    onClick={() => setTestMonths(12)}
+                  >
+                    12 meses
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
