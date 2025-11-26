@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
 import OrdersSummary from "./OrdersSummary";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("pt-BR", {
@@ -28,25 +29,114 @@ const SupplierDashboard = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
-  const [testMonths, setTestMonths] = useState(3);
+  const [monthlyOrdersModal, setMonthlyOrdersModal] = useState<{ isOpen: boolean; month: string; orders: any[] }>({
+    isOpen: false,
+    month: "",
+    orders: []
+  });
+  const [totalPedidosMes, setTotalPedidosMes] = useState(0);
+  const [valorEntregue, setValorEntregue] = useState(0);
+  const [valorReceber, setValorReceber] = useState(0);
+  const [pedidosPendentes, setPedidosPendentes] = useState(0);
+  const [monthlyData, setMonthlyData] = useState<Array<{ month: string; value: number }>>([]);
 
-  // Mock data - will be replaced with real data from Supabase
-  const allMonthlyData = [
-    { month: "Jan", value: 45000 },
-    { month: "Fev", value: 52000 },
-    { month: "Mar", value: 48000 },
-    { month: "Abr", value: 42000 },
-    { month: "Mai", value: 55000 },
-    { month: "Jun", value: 49000 },
-    { month: "Jul", value: 51000 },
-    { month: "Ago", value: 47000 },
-    { month: "Set", value: 53000 },
-    { month: "Out", value: 46000 },
-    { month: "Nov", value: 50000 },
-    { month: "Dez", value: 54000 },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
-  const monthlyData = allMonthlyData.slice(0, testMonths);
+  const fetchDashboardData = async () => {
+    if (!user) return;
+
+    try {
+      // Get supplier ID
+      const { data: supplierData } = await supabase
+        .from("suppliers")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!supplierData) return;
+
+      // Get current month orders
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const firstDayOfMonth = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
+      
+      // Total pedidos no mês atual
+      const { count: totalPedidos } = await supabase
+        .from("orders")
+        .select("*", { count: 'exact', head: true })
+        .eq("supplier_id", supplierData.id)
+        .gte("order_date", firstDayOfMonth);
+      
+      setTotalPedidosMes(totalPedidos || 0);
+
+      // Valor entregue no mês atual
+      const { data: entregueData } = await supabase
+        .from("orders")
+        .select("value")
+        .eq("supplier_id", supplierData.id)
+        .eq("delivery_status", "entregue")
+        .gte("order_date", firstDayOfMonth);
+      
+      const totalEntregue = entregueData?.reduce((sum, order) => sum + (order.value || 0), 0) || 0;
+      setValorEntregue(totalEntregue);
+
+      // Valor a receber (todos os pedidos não entregues do ano)
+      const firstDayOfYear = new Date(currentYear, 0, 1).toISOString().split('T')[0];
+      const { data: receberData } = await supabase
+        .from("orders")
+        .select("value")
+        .eq("supplier_id", supplierData.id)
+        .neq("delivery_status", "entregue")
+        .gte("order_date", firstDayOfYear);
+      
+      const totalReceber = receberData?.reduce((sum, order) => sum + (order.value || 0), 0) || 0;
+      setValorReceber(totalReceber);
+
+      // Pedidos pendentes
+      const { count: pendentesCount } = await supabase
+        .from("orders")
+        .select("*", { count: 'exact', head: true })
+        .eq("supplier_id", supplierData.id)
+        .eq("status", "pendente");
+      
+      setPedidosPendentes(pendentesCount || 0);
+
+      // Fetch monthly data for chart (current year)
+      const { data: allOrders } = await supabase
+        .from("orders")
+        .select("order_date, value")
+        .eq("supplier_id", supplierData.id)
+        .gte("order_date", firstDayOfYear)
+        .eq("delivery_status", "entregue");
+
+      // Group by month
+      const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const monthlyValues = new Array(12).fill(0);
+      
+      allOrders?.forEach(order => {
+        const orderDate = new Date(order.order_date);
+        const month = orderDate.getMonth();
+        monthlyValues[month] += order.value || 0;
+      });
+
+      const chartData = monthlyValues
+        .map((value, index) => ({
+          month: monthNames[index],
+          value: value,
+          monthIndex: index
+        }))
+        .filter(item => item.monthIndex <= currentMonth || item.value > 0);
+
+      setMonthlyData(chartData);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -179,6 +269,9 @@ const SupplierDashboard = () => {
       const photoInput = document.getElementById('photo') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
       if (photoInput) photoInput.value = '';
+      
+      // Refresh dashboard data
+      fetchDashboardData();
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({
@@ -193,6 +286,47 @@ const SupplierDashboard = () => {
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleBarClick = async (data: any) => {
+    if (!user) return;
+
+    try {
+      const { data: supplierData } = await supabase
+        .from("suppliers")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!supplierData) return;
+
+      // Get month index from clicked data
+      const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const monthIndex = monthNames.indexOf(data.month);
+      
+      if (monthIndex === -1) return;
+
+      const currentYear = new Date().getFullYear();
+      const firstDay = new Date(currentYear, monthIndex, 1).toISOString().split('T')[0];
+      const lastDay = new Date(currentYear, monthIndex + 1, 0).toISOString().split('T')[0];
+
+      // Fetch orders for this month
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("*, suppliers(name)")
+        .eq("supplier_id", supplierData.id)
+        .gte("order_date", firstDay)
+        .lte("order_date", lastDay)
+        .order("order_date", { ascending: false });
+
+      setMonthlyOrdersModal({
+        isOpen: true,
+        month: data.month,
+        orders: orders || []
+      });
+    } catch (error) {
+      console.error("Error fetching monthly orders:", error);
+    }
   };
 
   if (authLoading) {
@@ -240,22 +374,22 @@ const SupplierDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-background/95 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-lg">Notas Fiscais</CardTitle>
-              <CardDescription>Total de notas emitidas</CardDescription>
+              <CardTitle className="text-lg">Total de Pedidos no Mês</CardTitle>
+              <CardDescription>Pedidos do mês atual</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">24</div>
+              <div className="text-3xl font-bold">{totalPedidosMes}</div>
             </CardContent>
           </Card>
 
           <Card className="bg-background/95 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-lg">Valor Entregue</CardTitle>
-              <CardDescription>Total já recebido</CardDescription>
+              <CardDescription>Faturamento do mês atual</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600">
-                {formatCurrency(145000)}
+                {formatCurrency(valorEntregue)}
               </div>
             </CardContent>
           </Card>
@@ -263,11 +397,11 @@ const SupplierDashboard = () => {
           <Card className="bg-background/95 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="text-lg">A Receber</CardTitle>
-              <CardDescription>Valor pendente</CardDescription>
+              <CardDescription>Valor pendente do ano</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-yellow-600">
-                {formatCurrency(52000)}
+                {formatCurrency(valorReceber)}
               </div>
             </CardContent>
           </Card>
@@ -278,7 +412,7 @@ const SupplierDashboard = () => {
               <CardDescription>Aguardando processamento</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-600">8</div>
+              <div className="text-3xl font-bold text-orange-600">{pedidosPendentes}</div>
             </CardContent>
           </Card>
         </div>
@@ -286,49 +420,8 @@ const SupplierDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-background/95 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                <div>
-                  <CardTitle>Faturamento Mensal</CardTitle>
-                  <CardDescription>Valores por mês (R$)</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant={testMonths === 1 ? "default" : "outline"}
-                    onClick={() => setTestMonths(1)}
-                  >
-                    1 mês
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={testMonths === 2 ? "default" : "outline"}
-                    onClick={() => setTestMonths(2)}
-                  >
-                    2 meses
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={testMonths === 6 ? "default" : "outline"}
-                    onClick={() => setTestMonths(6)}
-                  >
-                    6 meses
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={testMonths === 8 ? "default" : "outline"}
-                    onClick={() => setTestMonths(8)}
-                  >
-                    8 meses
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant={testMonths === 12 ? "default" : "outline"}
-                    onClick={() => setTestMonths(12)}
-                  >
-                    12 meses
-                  </Button>
-                </div>
-              </div>
+              <CardTitle>Faturamento Mensal</CardTitle>
+              <CardDescription>Valores entregues por mês (R$)</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -337,7 +430,12 @@ const SupplierDashboard = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" />
+                  <Bar 
+                    dataKey="value" 
+                    fill="hsl(var(--primary))" 
+                    cursor="pointer"
+                    onClick={handleBarClick}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -404,6 +502,62 @@ const SupplierDashboard = () => {
 
       {/* Orders Summary Modal */}
       {showOrdersSummary && <OrdersSummary onClose={() => setShowOrdersSummary(false)} />}
+
+      {/* Monthly Orders Modal */}
+      <Dialog open={monthlyOrdersModal.isOpen} onOpenChange={(open) => setMonthlyOrdersModal({ ...monthlyOrdersModal, isOpen: open })}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Pedidos de {monthlyOrdersModal.month}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {monthlyOrdersModal.orders.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Nenhum pedido encontrado neste mês.</p>
+            ) : (
+              <div className="grid gap-4">
+                {monthlyOrdersModal.orders.map((order, index) => (
+                  <Card key={order.id}>
+                    <CardHeader>
+                      <CardTitle className="text-base">Pedido {index + 1}</CardTitle>
+                      <CardDescription>
+                        Data: {new Date(order.order_date).toLocaleDateString('pt-BR')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Valor:</span>
+                        <span className="font-semibold">{formatCurrency(order.value || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Status:</span>
+                        <span className="font-semibold">{order.delivery_status}</span>
+                      </div>
+                      {order.photo_url && (
+                        <div className="mt-4">
+                          <img 
+                            src={order.photo_url} 
+                            alt="Foto do pedido" 
+                            className="w-full h-auto rounded-lg border"
+                          />
+                        </div>
+                      )}
+                      {order.file_url && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full mt-2"
+                          onClick={() => window.open(order.file_url, '_blank')}
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          Ver arquivo
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
