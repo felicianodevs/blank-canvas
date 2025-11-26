@@ -294,6 +294,20 @@ const SupplierDashboard = () => {
                 <div className="flex gap-2">
                   <Button 
                     size="sm" 
+                    variant={testMonths === 1 ? "default" : "outline"}
+                    onClick={() => setTestMonths(1)}
+                  >
+                    1 mês
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={testMonths === 2 ? "default" : "outline"}
+                    onClick={() => setTestMonths(2)}
+                  >
+                    2 meses
+                  </Button>
+                  <Button 
+                    size="sm" 
                     variant={testMonths === 6 ? "default" : "outline"}
                     onClick={() => setTestMonths(6)}
                   >
