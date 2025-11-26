@@ -39,6 +39,11 @@ const SupplierDashboard = () => {
     isOpen: false,
     photoUrl: null
   });
+  const [viewFileModal, setViewFileModal] = useState<{ isOpen: boolean; fileUrl: string | null; fileName: string | null }>({
+    isOpen: false,
+    fileUrl: null,
+    fileName: null
+  });
   const [totalPedidosMes, setTotalPedidosMes] = useState(0);
   const [valorEntregue, setValorEntregue] = useState(0);
   const [valorReceber, setValorReceber] = useState(0);
@@ -568,7 +573,11 @@ const SupplierDashboard = () => {
                           <Button 
                             variant="outline" 
                             className="flex-1"
-                            onClick={() => window.open(order.file_url, '_blank')}
+                            onClick={() => setViewFileModal({ 
+                              isOpen: true, 
+                              fileUrl: order.file_url, 
+                              fileName: order.file_name 
+                            })}
                           >
                             <FileText className="mr-2 h-4 w-4" />
                             Ver arquivo
@@ -596,6 +605,31 @@ const SupplierDashboard = () => {
               alt="Foto do pedido" 
               className="w-full h-auto rounded-lg"
             />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* File View Modal */}
+      <Dialog open={viewFileModal.isOpen} onOpenChange={(open) => setViewFileModal({ ...viewFileModal, isOpen: open })}>
+        <DialogContent className="max-w-5xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>{viewFileModal.fileName || 'Arquivo do Pedido'}</DialogTitle>
+          </DialogHeader>
+          {viewFileModal.fileUrl && (
+            <div className="space-y-4">
+              <iframe 
+                src={viewFileModal.fileUrl} 
+                className="w-full h-[70vh] rounded-lg border"
+                title="Visualização do arquivo"
+              />
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => window.open(viewFileModal.fileUrl!, '_blank')}
+              >
+                Abrir em nova aba / Baixar
+              </Button>
+            </div>
           )}
         </DialogContent>
       </Dialog>
