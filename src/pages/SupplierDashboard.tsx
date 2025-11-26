@@ -35,6 +35,10 @@ const SupplierDashboard = () => {
     month: "",
     orders: []
   });
+  const [viewPhotoModal, setViewPhotoModal] = useState<{ isOpen: boolean; photoUrl: string | null }>({
+    isOpen: false,
+    photoUrl: null
+  });
   const [totalPedidosMes, setTotalPedidosMes] = useState(0);
   const [valorEntregue, setValorEntregue] = useState(0);
   const [valorReceber, setValorReceber] = useState(0);
@@ -550,31 +554,49 @@ const SupplierDashboard = () => {
                         <span className="text-sm text-muted-foreground">Status:</span>
                         <span className="font-semibold">{order.delivery_status}</span>
                       </div>
-                      {order.photo_url && (
-                        <div className="mt-4">
-                          <img 
-                            src={order.photo_url} 
-                            alt="Foto do pedido" 
-                            className="w-full h-auto rounded-lg border"
-                          />
-                        </div>
-                      )}
-                      {order.file_url && (
-                        <Button 
-                          variant="outline" 
-                          className="w-full mt-2"
-                          onClick={() => window.open(order.file_url, '_blank')}
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          Ver arquivo
-                        </Button>
-                      )}
+                      <div className="flex gap-2 mt-2">
+                        {order.photo_url && (
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => setViewPhotoModal({ isOpen: true, photoUrl: order.photo_url })}
+                          >
+                            Ver foto
+                          </Button>
+                        )}
+                        {order.file_url && (
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => window.open(order.file_url, '_blank')}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Ver arquivo
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo View Modal */}
+      <Dialog open={viewPhotoModal.isOpen} onOpenChange={(open) => setViewPhotoModal({ ...viewPhotoModal, isOpen: open })}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Foto do Pedido</DialogTitle>
+          </DialogHeader>
+          {viewPhotoModal.photoUrl && (
+            <img 
+              src={viewPhotoModal.photoUrl} 
+              alt="Foto do pedido" 
+              className="w-full h-auto rounded-lg"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
