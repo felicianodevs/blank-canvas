@@ -27,6 +27,7 @@ const SupplierDashboard = () => {
   const { logout, loading: authLoading, user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [orderValue, setOrderValue] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
   const [monthlyOrdersModal, setMonthlyOrdersModal] = useState<{ isOpen: boolean; month: string; orders: any[] }>({
@@ -243,6 +244,8 @@ const SupplierDashboard = () => {
       }
 
       // Insert order record with "enviado" status
+      const valueToInsert = orderValue ? parseFloat(orderValue.replace(/[^\d,]/g, '').replace(',', '.')) : 0;
+      
       const { error: insertError } = await supabase
         .from("orders")
         .insert({
@@ -253,7 +256,7 @@ const SupplierDashboard = () => {
           photo_name: photoName,
           status: "enviado",
           delivery_status: "enviado",
-          value: 0, // User can update this later
+          value: valueToInsert,
         });
 
       if (insertError) throw insertError;
@@ -265,6 +268,7 @@ const SupplierDashboard = () => {
       
       setSelectedFile(null);
       setSelectedPhoto(null);
+      setOrderValue("");
       const fileInput = document.getElementById('file') as HTMLInputElement;
       const photoInput = document.getElementById('photo') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
@@ -488,6 +492,21 @@ const SupplierDashboard = () => {
                       Foto selecionada: {selectedPhoto.name}
                     </p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="value">Valor do pedido (R$)</Label>
+                  <Input
+                    id="value"
+                    type="text"
+                    placeholder="Ex: 1500,00"
+                    value={orderValue}
+                    onChange={(e) => setOrderValue(e.target.value)}
+                    className="flex-1"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Digite o valor para testar os cálculos
+                  </p>
                 </div>
 
                 <Button type="submit" className="w-full" disabled={uploading}>
