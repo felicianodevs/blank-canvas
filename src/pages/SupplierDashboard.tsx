@@ -279,7 +279,7 @@ const SupplierDashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData} barSize={60} barCategoryGap="15%">
+                <BarChart data={monthlyData} barCategoryGap="20%" maxBarSize={80}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
