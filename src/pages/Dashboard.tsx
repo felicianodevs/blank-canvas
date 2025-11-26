@@ -48,9 +48,12 @@ const Dashboard = () => {
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [testMonths, setTestMonths] = useState(5);
 
-  // Filter only months with orders
-  const activeMonthsData = monthlyOrdersData.filter(month => month.pedidos > 0);
+  // Filter only months with orders and limit by testMonths
+  const activeMonthsData = monthlyOrdersData
+    .filter(month => month.pedidos > 0)
+    .slice(0, testMonths);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -147,11 +150,38 @@ const Dashboard = () => {
           {/* Monthly Orders Chart */}
           <Card className="shadow-2xl border-0">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                Pedidos por Mês
-              </CardTitle>
-              <CardDescription>Total de pedidos realizados nos últimos meses</CardDescription>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Pedidos por Mês
+                  </CardTitle>
+                  <CardDescription>Total de pedidos realizados nos últimos meses</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant={testMonths === 3 ? "default" : "outline"}
+                    onClick={() => setTestMonths(3)}
+                  >
+                    3 meses
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={testMonths === 5 ? "default" : "outline"}
+                    onClick={() => setTestMonths(5)}
+                  >
+                    5 meses
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant={testMonths === 8 ? "default" : "outline"}
+                    onClick={() => setTestMonths(8)}
+                  >
+                    8 meses
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px]">
