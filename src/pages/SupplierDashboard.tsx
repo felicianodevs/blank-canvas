@@ -107,13 +107,13 @@ const SupplierDashboard = () => {
       
       setPedidosPendentes(pendentesCount || 0);
 
-      // Fetch monthly data for chart (current year)
+      // Fetch monthly data for chart (current year) - all orders with value
       const { data: allOrders } = await supabase
         .from("orders")
         .select("order_date, value")
         .eq("supplier_id", supplierData.id)
         .gte("order_date", firstDayOfYear)
-        .eq("delivery_status", "entregue");
+        .not("value", "is", null);
 
       // Group by month
       const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
