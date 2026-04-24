@@ -53,76 +53,29 @@ const Login = () => {
     return newRoleData.role as "empresa" | "fornecedor";
   };
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const role = await getOrCreateUserRole(
-            session.user.id,
-            session.user.user_metadata
-          );
-
-          if (role === "empresa") {
-            navigate("/dashboard");
-          } else if (role === "fornecedor") {
-            navigate("/supplier-dashboard");
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao verificar sessão do usuário:", error);
-      }
-    };
-    checkUser();
-  }, [navigate]);
+  // MODO DE TESTE: não redireciona automaticamente — sempre mostra o login
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage(null);
 
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error("Erro ao fazer login");
-      }
-
-      // Get or create user role based on metadata
-      const role = await getOrCreateUserRole(
-        authData.user.id,
-        authData.user.user_metadata
-      );
-
-      // Show logo spinning animation
-      setShowLogoSpinning(true);
-      
-      // After 4 seconds, show success message
-      setTimeout(() => {
-        setShowLogoSpinning(false);
-        setShowSuccess(true);
-        
-        // After 2 more seconds, redirect
-        setTimeout(() => {
-          if (role === "empresa") {
-            navigate("/dashboard");
-          } else if (role === "fornecedor") {
-            navigate("/supplier-dashboard");
-          }
-        }, 2000);
-      }, 4000);
-    } catch (error: any) {
-      console.error("Login error:", error);
-      setErrorMessage("VOCÊ ERROU A Senha ou o Email tente novamente");
-    } finally {
+    // MODO DE TESTE: aceita qualquer email/senha
+    if (!email || !password) {
+      setErrorMessage("Preencha email e senha");
       setLoading(false);
+      return;
     }
+
+    setShowLogoSpinning(true);
+    setTimeout(() => {
+      setShowLogoSpinning(false);
+      setShowSuccess(true);
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
+    }, 4000);
+    setLoading(false);
   };
 
   return (
