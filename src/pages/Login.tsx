@@ -53,29 +53,7 @@ const Login = () => {
     return newRoleData.role as "empresa" | "fornecedor";
   };
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const role = await getOrCreateUserRole(
-            session.user.id,
-            session.user.user_metadata
-          );
-
-          if (role === "empresa") {
-            navigate("/dashboard");
-          } else if (role === "fornecedor") {
-            navigate("/supplier-dashboard");
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao verificar sessão do usuário:", error);
-      }
-    };
-    checkUser();
-  }, [navigate]);
+  // MODO DE TESTE: não redireciona automaticamente — sempre mostra o login
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
