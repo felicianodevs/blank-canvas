@@ -2,11 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
-import { ArrowLeft, FileText, Download, Eye, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye, ArrowUpDown, Send, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -22,6 +26,8 @@ const mockOrders = [
   { id: "008", date: "2025-02-02", supplier: "Fornecedor JKL", value: 14500.00, status: "processing", file: "pedido_008.pdf" },
 ];
 
+const suppliersList = Array.from(new Set(mockOrders.map((o) => o.supplier)));
+
 const statusLabels = {
   pending: { label: "Pendente", variant: "secondary" as const },
   processing: { label: "Em Análise", variant: "default" as const },
@@ -30,65 +36,157 @@ const statusLabels = {
 
 const Orders = () => {
   const navigate = useNavigate();
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const { toast } = useToast();
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
-  const [observation, setObservation] = useState('');
+  const [observation, setObservation] = useState("");
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
+  // Send-note dialog state
+  const [sendOpen, setSendOpen] = useState(false);
+  const [supplierTarget, setSupplierTarget] = useState<string>("");
+  const [noteContent, setNoteContent] = useState("");
+  const [supplierError, setSupplierError] = useState<string | null>(null);
 
-  const toggleSortOrder = () => {
-    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+  const toggleSortOrder = () => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
 
   const sortedOrders = [...mockOrders].sort((a, b) => {
     const dateA = new Date(a.date).getTime();
     const dateB = new Date(b.date).getTime();
-    return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
   });
 
   const handleViewOrder = (order: typeof mockOrders[0]) => {
     setSelectedOrder(order);
-    setObservation('');
+    setObservation("");
+  };
+
+  const openSendDialog = (preselectSupplier?: string) => {
+    setSupplierTarget(preselectSupplier ?? "");
+    setNoteContent("");
+    setSupplierError(null);
+    setSendOpen(true);
+  };
+
+  const handleSendNote = () => {
+    if (!supplierTarget) {
+      setSupplierError("Selecione um fornecedor antes de enviar a nota.");
+      toast({
+        title: "Fornecedor não selecionado",
+        description: "A nota não foi enviada — escolha para qual fornecedor ela vai.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!noteContent.trim()) {
+      toast({
+        title: "Nota vazia",
+        description: "Escreva o conteúdo da nota antes de enviar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Nota enviada",
+      description: `Enviada para ${supplierTarget} com sucesso.`,
+    });
+    setSendOpen(false);
   };
 
   return (
-    <div 
-      className="min-h-screen p-4 relative"
+    <div
+      className="min-h-screen p-3 sm:p-4 md:p-6 relative"
       style={{
         backgroundImage: `url(${background})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
       <div className="absolute inset-0 bg-primary/40 backdrop-blur-md" />
-      
+
       <div className="w-full max-w-7xl mx-auto relative z-10 space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
-          <Button 
-            variant="secondary" 
-            onClick={() => navigate("/dashboard")}
-            className="gap-2 w-full sm:w-auto"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar ao Dashboard
-          </Button>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <img src={logo} alt="Unimaq Logo" className="h-12 sm:h-16 md:h-20 w-auto" />
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="default"
+              onClick={() => openSendDialog()}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <Send className="w-4 h-4" />
+              Enviar Nota
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/dashboard")}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden xs:inline">Voltar ao Dashboard</span>
+              <span className="xs:hidden">Voltar</span>
+            </Button>
+          </div>
         </div>
 
         <Card className="shadow-2xl border-0">
-          <CardHeader>
-            <CardTitle className="text-2xl sm:text-3xl font-bold">Pedidos de Compra</CardTitle>
-            <CardDescription className="text-sm sm:text-base">
+          <CardHeader className="px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-2xl md:text-3xl font-bold">Pedidos de Compra</CardTitle>
+            <CardDescription className="text-xs sm:text-sm md:text-base">
               Todos os pedidos anexados e seu status
             </CardDescription>
           </CardHeader>
           <CardContent className="px-2 sm:px-6">
-            <div className="rounded-md border overflow-x-auto">
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-3">
+              {sortedOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="rounded-lg border bg-card p-3 space-y-2 shadow-sm"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm">#{order.id} — {order.supplier}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(order.date).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                    <Badge variant={statusLabels[order.status].variant} className="text-xs shrink-0">
+                      {statusLabels[order.status].label}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{order.file}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <span className="font-semibold text-sm">{formatCurrency(order.value)}</span>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleViewOrder(order)} className="h-8 w-8 p-0">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openSendDialog(order.supplier)}
+                        className="h-8 w-8 p-0"
+                        title="Enviar nota"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop / tablet: table */}
+            <div className="hidden md:block rounded-md border overflow-x-auto">
               <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow>
@@ -96,12 +194,7 @@ const Orders = () => {
                     <TableHead className="w-[120px]">
                       <div className="flex items-center gap-1">
                         Data
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={toggleSortOrder}
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button variant="ghost" size="sm" onClick={toggleSortOrder} className="h-8 w-8 p-0">
                           <ArrowUpDown className="w-4 h-4" />
                         </Button>
                       </div>
@@ -110,14 +203,14 @@ const Orders = () => {
                     <TableHead className="max-w-[200px]">Arquivo</TableHead>
                     <TableHead className="text-right w-[120px]">Valor</TableHead>
                     <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="text-right w-[100px]">Ações</TableHead>
+                    <TableHead className="text-right w-[140px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedOrders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">#{order.id}</TableCell>
-                      <TableCell className="text-sm">{new Date(order.date).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell className="text-sm">{new Date(order.date).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell className="truncate max-w-[150px]">{order.supplier}</TableCell>
                       <TableCell className="truncate max-w-[200px]">
                         <div className="flex items-center gap-2">
@@ -135,16 +228,20 @@ const Orders = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewOrder(order)}
-                            className="h-8 w-8 p-0"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleViewOrder(order)} className="h-8 w-8 p-0">
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <Download className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openSendDialog(order.supplier)}
+                            className="h-8 w-8 p-0"
+                            title="Enviar nota"
+                          >
+                            <Send className="w-4 h-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -157,21 +254,20 @@ const Orders = () => {
         </Card>
       </div>
 
+      {/* View order dialog */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalhes do Pedido #{selectedOrder?.id}</DialogTitle>
-            <DialogDescription>
-              Visualize o pedido de compra e adicione observações
-            </DialogDescription>
+            <DialogDescription>Visualize o pedido de compra e adicione observações</DialogDescription>
           </DialogHeader>
-          
+
           {selectedOrder && (
             <div className="space-y-4 sm:space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Data</p>
-                  <p className="font-medium">{new Date(selectedOrder.date).toLocaleDateString('pt-BR')}</p>
+                  <p className="font-medium">{new Date(selectedOrder.date).toLocaleDateString("pt-BR")}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Fornecedor</p>
@@ -189,25 +285,25 @@ const Orders = () => {
                 </div>
               </div>
 
-              <div className="border rounded-lg p-4 bg-muted/50">
+              <div className="border rounded-lg p-3 sm:p-4 bg-muted/50">
                 <div className="flex items-center gap-3 mb-4">
-                  <FileText className="w-8 h-8 text-primary" />
-                  <div>
-                    <p className="font-medium">{selectedOrder.file}</p>
+                  <FileText className="w-8 h-8 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{selectedOrder.file}</p>
                     <p className="text-sm text-muted-foreground">Arquivo do pedido de compra</p>
                   </div>
                 </div>
-                <div className="bg-background rounded border p-8 min-h-[200px] flex items-center justify-center">
+                <div className="bg-background rounded border p-6 sm:p-8 min-h-[160px] sm:min-h-[200px] flex items-center justify-center">
                   <div className="text-center text-muted-foreground">
-                    <FileText className="w-16 h-16 mx-auto mb-2 opacity-50" />
-                    <p>Pré-visualização do arquivo</p>
-                    <p className="text-xs mt-1">{selectedOrder.file}</p>
+                    <FileText className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm sm:text-base">Pré-visualização do arquivo</p>
+                    <p className="text-xs mt-1 break-all">{selectedOrder.file}</p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Observações</label>
+                <Label className="text-sm font-medium">Observações</Label>
                 <Textarea
                   placeholder="Adicione observações sobre este pedido..."
                   value={observation}
@@ -216,19 +312,105 @@ const Orders = () => {
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    openSendDialog(selectedOrder.supplier);
+                  }}
+                  className="gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  Enviar Nota a este fornecedor
+                </Button>
                 <Button variant="outline" onClick={() => setSelectedOrder(null)}>
                   Fechar
                 </Button>
-                <Button onClick={() => {
-                  console.log('Observação salva:', observation);
-                  setSelectedOrder(null);
-                }}>
+                <Button
+                  onClick={() => {
+                    toast({ title: "Observação salva" });
+                    setSelectedOrder(null);
+                  }}
+                >
                   Salvar Observação
                 </Button>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Send note dialog */}
+      <Dialog open={sendOpen} onOpenChange={setSendOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Enviar Nota ao Fornecedor</DialogTitle>
+            <DialogDescription>
+              Selecione o fornecedor de destino. <strong>Sem fornecedor, a nota não é enviada para ninguém.</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="supplier-select">Fornecedor *</Label>
+              <Select
+                value={supplierTarget}
+                onValueChange={(v) => {
+                  setSupplierTarget(v);
+                  setSupplierError(null);
+                }}
+              >
+                <SelectTrigger
+                  id="supplier-select"
+                  className={supplierError ? "border-destructive" : ""}
+                >
+                  <SelectValue placeholder="Selecione um fornecedor..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliersList.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {supplierError && (
+                <div className="flex items-start gap-2 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>{supplierError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="note-content">Conteúdo da Nota *</Label>
+              <Textarea
+                id="note-content"
+                placeholder="Escreva a mensagem para o fornecedor..."
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                rows={5}
+                maxLength={1000}
+              />
+              <p className="text-xs text-muted-foreground text-right">{noteContent.length}/1000</p>
+            </div>
+
+            {supplierTarget && (
+              <div className="rounded-md bg-muted p-3 text-sm">
+                Esta nota será enviada para: <strong>{supplierTarget}</strong>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setSendOpen(false)} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button onClick={handleSendNote} className="w-full sm:w-auto gap-2">
+              <Send className="w-4 h-4" />
+              Enviar Nota
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
