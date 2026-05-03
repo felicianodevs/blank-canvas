@@ -361,6 +361,23 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="supplier" className="text-base">Fornecedor</Label>
+                <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
+                  <SelectTrigger id="supplier" className="h-12">
+                    <SelectValue placeholder="Selecione o fornecedor que receberá o pedido" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers.length === 0 ? (
+                      <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum fornecedor cadastrado</div>
+                    ) : (
+                      suppliers.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-4">
                 <Label htmlFor="fileInput" className="text-base">
                   Pedido de Compra
