@@ -351,83 +351,99 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Upload Section */}
-        <Card className="shadow-2xl border-0">
-          <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-3xl font-bold">Enviar Novo Pedido</CardTitle>
-            <CardDescription className="text-base">
-              Envie seu pedido de compra para análise
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="supplier" className="text-base">Fornecedor</Label>
-                <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
-                  <SelectTrigger id="supplier" className="h-12">
-                    <SelectValue placeholder="Selecione o fornecedor que receberá o pedido" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suppliers.length === 0 ? (
-                      <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum fornecedor cadastrado</div>
-                    ) : (
-                      suppliers.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-4">
-                <Label htmlFor="fileInput" className="text-base">
-                  Pedido de Compra
-                </Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                  <Input
-                    id="fileInput"
-                    type="file"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx"
-                  />
-                  <Label htmlFor="fileInput" className="cursor-pointer flex flex-col items-center gap-4">
-                    {selectedFile ? (
-                      <>
-                        <FileText className="w-16 h-16 text-primary" />
-                        <div>
-                          <p className="font-medium text-lg">{selectedFile.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-16 h-16 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium text-lg">Clique para selecionar</p>
-                          <p className="text-sm text-muted-foreground">
-                            PDF, DOC, DOCX, XLS, XLSX
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </Label>
-                </div>
-              </div>
-
-              <Button 
-                type="submit" 
-                size="lg" 
-                className="w-full text-lg h-14 gap-2"
-              >
-                <Upload className="w-5 h-5" />
-                ANEXAR PEDIDO DE COMPRA
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        {/* Send Order Button */}
+        <div className="flex justify-center">
+          <Button
+            size="lg"
+            className="text-lg h-14 px-8 gap-2"
+            onClick={() => setShowOrderModal(true)}
+          >
+            <Upload className="w-5 h-5" />
+            ENVIAR PEDIDO DE COMPRA
+          </Button>
+        </div>
       </div>
+
+      {/* New Order Modal */}
+      <Dialog open={showOrderModal} onOpenChange={setShowOrderModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Enviar Novo Pedido</DialogTitle>
+            <DialogDescription>
+              Preencha as informações e envie o pedido ao fornecedor
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="supplier" className="text-base">Fornecedor</Label>
+              <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
+                <SelectTrigger id="supplier" className="h-12">
+                  <SelectValue placeholder="Selecione o fornecedor que receberá o pedido" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.length === 0 ? (
+                    <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum fornecedor cadastrado</div>
+                  ) : (
+                    suppliers.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fileInput" className="text-base">Pedido de Compra</Label>
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition-colors">
+                <Input
+                  id="fileInput"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                />
+                <Label htmlFor="fileInput" className="cursor-pointer flex flex-col items-center gap-3">
+                  {selectedFile ? (
+                    <>
+                      <FileText className="w-12 h-12 text-primary" />
+                      <div>
+                        <p className="font-medium">{selectedFile.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-12 h-12 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">Clique para selecionar</p>
+                        <p className="text-sm text-muted-foreground">PDF, DOC, DOCX, XLS, XLSX</p>
+                      </div>
+                    </>
+                  )}
+                </Label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-base">Observações</Label>
+              <Textarea
+                id="notes"
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                placeholder="Adicione informações importantes sobre o pedido (prazo, condições, detalhes)"
+                rows={4}
+              />
+            </div>
+
+            <Button type="submit" size="lg" className="w-full text-lg h-12 gap-2">
+              <Upload className="w-5 h-5" />
+              ENVIAR PEDIDO
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Orders Summary Modal */}
       {showOrdersSummary && <OrdersSummary onClose={() => setShowOrdersSummary(false)} />}
