@@ -136,13 +136,13 @@ const Dashboard = () => {
       <div className="absolute inset-0 bg-primary/40 backdrop-blur-md" />
       
       <div className="w-full max-w-7xl mx-auto relative z-10 space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <img src={logo} alt="Unimaq Logo" className="h-14 sm:h-16 md:h-20 w-auto" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full md:w-auto">
             <Button
               variant="secondary"
               onClick={() => setShowOrderModal(true)}
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full md:w-auto"
             >
               <Upload className="w-4 h-4" />
               <span className="hidden sm:inline">Enviar Pedido</span>
@@ -151,16 +151,15 @@ const Dashboard = () => {
             <Button 
               variant="secondary" 
               onClick={() => setShowOrdersSummary(true)}
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full md:w-auto"
             >
               <ClipboardList className="w-4 h-4" />
-              <span className="hidden sm:inline">Resumo</span>
-              <span className="sm:hidden">Resumo</span>
+              <span>Resumo</span>
             </Button>
             <Button 
               variant="secondary" 
               onClick={() => navigate("/orders")}
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full md:w-auto"
             >
               <FileStack className="w-4 h-4" />
               <span className="hidden sm:inline">Ver Todos os Pedidos</span>
@@ -169,7 +168,7 @@ const Dashboard = () => {
             <Button 
               variant="secondary" 
               onClick={handleLogout}
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full md:w-auto"
             >
               <LogOut className="w-4 h-4" />
               Sair
