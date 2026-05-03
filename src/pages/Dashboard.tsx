@@ -139,6 +139,15 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <img src={logo} alt="Unimaq Logo" className="h-16 sm:h-20 w-auto" />
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button
+              variant="secondary"
+              onClick={() => setShowOrderModal(true)}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">Enviar Pedido</span>
+              <span className="sm:hidden">Enviar</span>
+            </Button>
             <Button 
               variant="secondary" 
               onClick={() => setShowOrdersSummary(true)}
