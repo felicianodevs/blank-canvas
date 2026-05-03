@@ -47,10 +47,20 @@ const statusData = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
+  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [testMonths, setTestMonths] = useState(5);
+
+  useEffect(() => {
+    supabase
+      .from("suppliers")
+      .select("id, name")
+      .order("name")
+      .then(({ data }) => setSuppliers(data || []));
+  }, []);
 
   // Filter only months with orders and limit by testMonths
   const activeMonthsData = monthlyOrdersData
