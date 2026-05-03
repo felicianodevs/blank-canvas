@@ -73,17 +73,22 @@ const Dashboard = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedFile) {
-      toast.success("Pedido enviado ao fornecedor");
-      setSelectedFile(null);
-      // Reset the file input
-      const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    } else {
+    if (!selectedFile) {
       toast.error("Por favor, selecione um arquivo");
+      return;
     }
+    if (!selectedSupplierId) {
+      toast.error("Por favor, selecione o fornecedor");
+      return;
+    }
+    const supplierName = suppliers.find(s => s.id === selectedSupplierId)?.name;
+    toast.success(`Pedido enviado para ${supplierName}`);
+    setSelectedFile(null);
+    setSelectedSupplierId("");
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   };
 
   const handleLogout = () => {
