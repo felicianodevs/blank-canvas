@@ -189,7 +189,7 @@ const Dashboard = () => {
                   </CardTitle>
                   <CardDescription>Total de pedidos realizados nos últimos meses</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button 
                     size="sm" 
                     variant={testMonths === 1 ? "default" : "outline"}
