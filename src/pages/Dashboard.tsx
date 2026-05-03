@@ -366,17 +366,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Send Order Button */}
-        <div className="flex justify-center">
-          <Button
-            size="lg"
-            className="text-lg h-14 px-8 gap-2"
-            onClick={() => setShowOrderModal(true)}
-          >
-            <Upload className="w-5 h-5" />
-            ENVIAR PEDIDO DE COMPRA
-          </Button>
-        </div>
       </div>
 
       {/* New Order Modal */}
