@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import background from "@/assets/background.webp";
 import { Upload, FileText, LogOut, BarChart3, FileStack, ClipboardList, X } from "lucide-react";
@@ -45,10 +47,20 @@ const statusData = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
+  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [testMonths, setTestMonths] = useState(5);
+
+  useEffect(() => {
+    supabase
+      .from("suppliers")
+      .select("id, name")
+      .order("name")
+      .then(({ data }) => setSuppliers(data || []));
+  }, []);
 
   // Filter only months with orders and limit by testMonths
   const activeMonthsData = monthlyOrdersData
@@ -61,17 +73,22 @@ const Dashboard = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedFile) {
-      toast.success("Pedido enviado ao fornecedor");
-      setSelectedFile(null);
-      // Reset the file input
-      const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    } else {
+    if (!selectedFile) {
       toast.error("Por favor, selecione um arquivo");
+      return;
     }
+    if (!selectedSupplierId) {
+      toast.error("Por favor, selecione o fornecedor");
+      return;
+    }
+    const supplierName = suppliers.find(s => s.id === selectedSupplierId)?.name;
+    toast.success(`Pedido enviado para ${supplierName}`);
+    setSelectedFile(null);
+    setSelectedSupplierId("");
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   };
 
   const handleLogout = () => {
@@ -344,6 +361,23 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="supplier" className="text-base">Fornecedor</Label>
+                <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
+                  <SelectTrigger id="supplier" className="h-12">
+                    <SelectValue placeholder="Selecione o fornecedor que receberá o pedido" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers.length === 0 ? (
+                      <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum fornecedor cadastrado</div>
+                    ) : (
+                      suppliers.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-4">
                 <Label htmlFor="fileInput" className="text-base">
                   Pedido de Compra
