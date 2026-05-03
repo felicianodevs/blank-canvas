@@ -91,6 +91,8 @@ const Dashboard = () => {
     toast.success(`Pedido enviado para ${supplierName}`);
     setSelectedFile(null);
     setSelectedSupplierId("");
+    setOrderNotes("");
+    setShowOrderModal(false);
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
