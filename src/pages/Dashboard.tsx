@@ -52,6 +52,8 @@ const Dashboard = () => {
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
   const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
   const [showOrdersSummary, setShowOrdersSummary] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderNotes, setOrderNotes] = useState("");
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [testMonths, setTestMonths] = useState(5);
